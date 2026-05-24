@@ -7,6 +7,7 @@ from app.services.appointment_service import (
     update_appointment,
     delete_appointment,
     generate_prenatal_consultations,
+    generate_monthly_analyses,
     complete_appointment,
     get_appointment_history,
 )
@@ -72,6 +73,18 @@ def create_new_appointment(current_user):
 def generate_prenatal_plan(current_user):
     try:
         result = generate_prenatal_consultations(current_user)
+        return jsonify(result), 200
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": "internal server error", "details": str(e)}), 500
+
+
+@appointment_bp.route("/generate-monthly-analyses", methods=["POST"])
+@current_user_required
+def generate_monthly_analyses_route(current_user):
+    try:
+        result = generate_monthly_analyses(current_user)
         return jsonify(result), 200
     except ValueError as e:
         return jsonify({"error": str(e)}), 400

@@ -47,7 +47,7 @@ PRENATAL_CONSULTATIONS = [
         "title": "Consultation prénatale 5",
         "notes": (
             "7ème mois (vers 28 SA) : vérification de la croissance fœtale, "
-            "bilan biologique (NFS, glycémie, HGPO si indiqué)."
+            "bilan biologique (NFS, HGPO , RAI)."
         ),
     },
     {
@@ -55,7 +55,7 @@ PRENATAL_CONSULTATIONS = [
         "title": "Consultation prénatale 6",
         "notes": (
             "8ème mois (vers 32 SA) : troisième échographie "
-            "(position du bébé, placenta, liquide amniotique) et examen du col."
+            "prélèvement vaginal et ECBU (examen d’urine)"
         ),
     },
     {
@@ -64,6 +64,30 @@ PRENATAL_CONSULTATIONS = [
         "notes": (
             "9ème mois (vers 36 SA) : préparation finale à l'accouchement, "
             "examen du bassin, présentation définitive, conseils sur les signes de travail."
+        ),
+    },
+]
+
+# Analyses sérologiques mensuelles
+# Toxo  : tous les mois jusqu'à la fin de la grossesse (~40 SA)
+# Rubéole: tous les mois jusqu'à 18 SA (si non immune)
+MONTHLY_ANALYSES = [
+    {
+        "type": "toxo",
+        "max_week": 40,
+        "title_template": "Sérologie toxoplasmose — mois {month}",
+        "notes": (
+            "Rappel : contrôle de la sérologie toxoplasmose à répéter chaque mois "
+            "en cas de séronégativité, jusqu'à l'accouchement."
+        ),
+    },
+    {
+        "type": "rubeole",
+        "max_week": 18,
+        "title_template": "Sérologie rubéole — mois {month}",
+        "notes": (
+            "Rappel : contrôle de la sérologie rubéole à répéter chaque mois "
+            "jusqu'à 18 SA en cas de séronégativité."
         ),
     },
 ]
@@ -157,6 +181,83 @@ def generate_prenatal_consultations(user, commit: bool = True) -> dict:
 
     return {
         "message": "prenatal consultations generated successfully",
+        "count": len(generated),
+        "appointments": [_serialize_appointment(a) for a in generated],
+    }
+
+
+def generate_monthly_analyses(user, commit: bool = True) -> dict:
+    """Generate monthly toxo & rubéole serology reminders as 'analyse' appointments.
+
+    - Toxoplasmosis: every 4 weeks from week 4 up to week 40 (full pregnancy).
+    - Rubéole      : every 4 weeks from week 4 up to week 18 SA.
+    Appointments are idempotent: existing auto records are updated, not duplicated.
+    """
+    pregnancy_profile = user.pregnancy_profile
+    if not pregnancy_profile:
+        raise ValueError("pregnancy profile not found")
+
+    generated = []
+
+    for analysis in MONTHLY_ANALYSES:
+        analysis_type = analysis["type"]
+        max_week = analysis["max_week"]
+        title_template = analysis["title_template"]
+        notes = analysis["notes"]
+
+        # Build target weeks: 4, 8, 12, … up to max_week
+        target_weeks = list(range(4, max_week + 1, 4))
+
+        # Fetch all existing auto analyse records for this analysis type
+        existing = Appointment.query.filter(
+            Appointment.user_id == user.id,
+            Appointment.source == "auto",
+            Appointment.type == "analyse",
+            Appointment.notes.like(f"%{analysis_type}%"),
+            Appointment.gestational_week_target.in_(target_weeks),
+        ).all()
+
+        existing_by_week = {
+            a.gestational_week_target: a for a in existing
+        }
+
+        for month_index, target_week in enumerate(target_weeks, start=1):
+            scheduled_date = _prenatal_date_from_lmp(
+                pregnancy_profile.lmp_date, target_week
+            )
+
+            appointment = existing_by_week.get(target_week)
+
+            if appointment is None:
+                appointment = Appointment(
+                    user_id=user.id,
+                    type="analyse",
+                    source="auto",
+                    status="planned",
+                    gestational_week_target=target_week,
+                )
+                db.session.add(appointment)
+
+            if appointment.status not in {"done", "cancelled"}:
+                appointment.title = title_template.format(month=month_index)
+                appointment.appointment_date = scheduled_date
+                appointment.appointment_time = None
+                appointment.location = None
+                appointment.doctor_name = None
+                appointment.notes = notes
+                appointment.source = "auto"
+                appointment.type = "analyse"
+                appointment.gestational_week_target = target_week
+
+            generated.append(appointment)
+
+    if commit:
+        db.session.commit()
+    else:
+        db.session.flush()
+
+    return {
+        "message": "monthly analyses generated successfully",
         "count": len(generated),
         "appointments": [_serialize_appointment(a) for a in generated],
     }
