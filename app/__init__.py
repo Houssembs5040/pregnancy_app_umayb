@@ -13,16 +13,21 @@ def create_app():
     migrate.init_app(app, db)
     jwt.init_app(app)
 
-    # === CORS CONFIGURATION - THIS IS THE IMPORTANT PART ===
+    # Parse comma-separated frontend URLs from env (supports multiple origins)
+    _frontend_urls = [
+        u.strip() for u in os.getenv("FRONTEND_URL", "").split(",") if u.strip()
+    ]
+
     CORS(
         app,
         origins=[
             "http://localhost:3000",
             "http://127.0.0.1:3000",
-            r"http://192\.168\.\d+\.\d+:3000",   # your local network
+            r"http://192\.168\.\d+\.\d+:3000",
             r"http://10\.\d+\.\d+\.\d+:3000",
             r"http://172\.(1[6-9]|2\d|3[01])\.\d+\.\d+:3000",
-            os.getenv("FRONTEND_URL", ""),       # set this on Render
+            r"https://.*\.vercel\.app",   # all Vercel preview deployments
+            *_frontend_urls,
         ],
         allow_headers=["Content-Type", "Authorization", "Accept"],
         methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
