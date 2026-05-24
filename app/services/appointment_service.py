@@ -47,7 +47,8 @@ PRENATAL_CONSULTATIONS = [
         "title": "Consultation prénatale 5",
         "notes": (
             "7ème mois (vers 28 SA) : vérification de la croissance fœtale, "
-            "bilan biologique (NFS, HGPO , RAI)."
+            "bilan biologique (NFS, HGPO , RAI) ,"
+            "Vaccination DtCa (diphterie_ tétanos _coqueluche)"
         ),
     },
     {
