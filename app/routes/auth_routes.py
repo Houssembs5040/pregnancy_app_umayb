@@ -6,7 +6,7 @@ from app.utils.decorators import current_user_required
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 
-@auth_bp.route("/register", methods=["POST", "OPTIONS"])
+@auth_bp.route("/register", methods=["POST"])
 def register():
     if not request.is_json:
         return jsonify({"error": "Request must be JSON"}), 400
@@ -23,7 +23,7 @@ def register():
         return jsonify({"error": "internal server error", "details": str(e)}), 500
 
 
-@auth_bp.route("/login", methods=["POST", "OPTIONS"])
+@auth_bp.route("/login", methods=["POST"])
 def login():
     if not request.is_json:
         return jsonify({"error": "Request must be JSON"}), 400
