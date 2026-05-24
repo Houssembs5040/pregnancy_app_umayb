@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: umayb-api
+    runtime: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn run:app"
+    envVars:
+      - key: FLASK_APP
+        value: run.py
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        sync: false
+      - key: JWT_SECRET_KEY
+        sync: false
+      # --- Aiven MySQL ---
+      - key: DB_HOST
+        value: mysql-1bb3eea6-houssembensalah53-d7ce.f.aivencloud.com
+      - key: DB_PORT
+        value: "11466"
+      - key: DB_USER
+        value: avnadmin
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        value: defaultdb
+      - key: DB_SSL
+        value: "true"
+      # --- AI Keys (fill the one(s) you use) ---
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      # --- Frontend URL for CORS ---
+      - key: FRONTEND_URL
+        sync: false

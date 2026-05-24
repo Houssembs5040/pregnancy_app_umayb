@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request
 from flask_cors import CORS
 from app.config import Config
@@ -21,6 +22,7 @@ def create_app():
             r"http://192\.168\.\d+\.\d+:3000",   # your local network
             r"http://10\.\d+\.\d+\.\d+:3000",
             r"http://172\.(1[6-9]|2\d|3[01])\.\d+\.\d+:3000",
+            os.getenv("FRONTEND_URL", ""),       # set this on Render
         ],
         allow_headers=["Content-Type", "Authorization", "Accept"],
         methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
