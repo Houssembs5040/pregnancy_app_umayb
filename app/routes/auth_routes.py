@@ -1,5 +1,4 @@
 from flask import Blueprint, request, jsonify
-from flask_cors import cross_origin
 
 from app.services.auth_service import register_user, login_user, get_current_user_data, change_password
 from app.utils.decorators import current_user_required
@@ -8,12 +7,6 @@ auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 
 @auth_bp.route("/register", methods=["POST", "OPTIONS"])
-@cross_origin(
-    origins=["http://localhost:3000", "http://127.0.0.1:3000"],
-    allow_headers=["Content-Type", "Authorization"],
-    methods=["POST", "OPTIONS"],
-    supports_credentials=False,
-)
 def register():
     if not request.is_json:
         return jsonify({"error": "Request must be JSON"}), 400
@@ -31,12 +24,6 @@ def register():
 
 
 @auth_bp.route("/login", methods=["POST", "OPTIONS"])
-@cross_origin(
-    origins=["http://localhost:3000", "http://127.0.0.1:3000"],
-    allow_headers=["Content-Type", "Authorization"],
-    methods=["POST", "OPTIONS"],
-    supports_credentials=False,
-)
 def login():
     if not request.is_json:
         return jsonify({"error": "Request must be JSON"}), 400

@@ -23,15 +23,13 @@ def create_app():
         origins=[
             "http://localhost:3000",
             "http://127.0.0.1:3000",
-            r"http://192\.168\.\d+\.\d+:3000",
-            r"http://10\.\d+\.\d+\.\d+:3000",
-            r"http://172\.(1[6-9]|2\d|3[01])\.\d+\.\d+:3000",
-            r"https://.*\.vercel\.app",   # all Vercel preview deployments
+            "https://umay-tau.vercel.app",      # production Vercel frontend
+            r"https://.*\.vercel\.app",          # all Vercel preview deployments (regex)
             *_frontend_urls,
         ],
-        allow_headers=["Content-Type", "Authorization", "Accept"],
+        allow_headers=["Content-Type", "Authorization", "Accept", "X-Requested-With"],
         methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        supports_credentials=True,   # important if you use JWT
+        supports_credentials=True,
         max_age=3600
     )
 
